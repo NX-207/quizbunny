@@ -1,5 +1,7 @@
 package com.nex.quizbunny.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nex.quizbunny.annotation.AuthCheck;
 import com.nex.quizbunny.common.BaseResponse;
@@ -11,6 +13,7 @@ import com.nex.quizbunny.exception.BusinessException;
 import com.nex.quizbunny.exception.ThrowUtils;
 import com.nex.quizbunny.model.dto.questionBankQuestion.QuestionBankQuestionAddRequest;
 import com.nex.quizbunny.model.dto.questionBankQuestion.QuestionBankQuestionQueryRequest;
+import com.nex.quizbunny.model.dto.questionBankQuestion.QuestionBankQuestionRemoveRequest;
 import com.nex.quizbunny.model.dto.questionBankQuestion.QuestionBankQuestionUpdateRequest;
 import com.nex.quizbunny.model.entity.QuestionBankQuestion;
 import com.nex.quizbunny.model.entity.User;
@@ -44,21 +47,20 @@ public class QuestionBankQuestionController {
     // region 增删改查
 
     /**
-     * 创建题库题目关联
+     * 创建题库题目关联（仅管理员可用）
      *
      * @param questionBankQuestionAddRequest
      * @param request
      * @return
      */
     @PostMapping("/add")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Long> addQuestionBankQuestion(@RequestBody QuestionBankQuestionAddRequest questionBankQuestionAddRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(questionBankQuestionAddRequest == null, ErrorCode.PARAMS_ERROR);
-        // todo 在此处将实体类和 DTO 进行转换
         QuestionBankQuestion questionBankQuestion = new QuestionBankQuestion();
         BeanUtils.copyProperties(questionBankQuestionAddRequest, questionBankQuestion);
         // 数据校验
         questionBankQuestionService.validQuestionBankQuestion(questionBankQuestion, true);
-        // todo 填充默认值
         User loginUser = userService.getLoginUser(request);
         questionBankQuestion.setUserId(loginUser.getId());
         // 写入数据库
@@ -202,6 +204,29 @@ public class QuestionBankQuestionController {
         return ResultUtils.success(questionBankQuestionService.getQuestionBankQuestionVOPage(questionBankQuestionPage, request));
     }
 
+    /**
+     * 移除题库题目关联（仅管理员可用）
+     *
+     * @param questionBankQuestionRemoveRequest
+     * @return
+     */
+    @PostMapping("/remove")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<Boolean> removeQuestionBankQuestion(
+            @RequestBody QuestionBankQuestionRemoveRequest questionBankQuestionRemoveRequest
+    ) {
+        // 参数校验
+        ThrowUtils.throwIf(questionBankQuestionRemoveRequest == null, ErrorCode.PARAMS_ERROR);
+        Long questionBankId = questionBankQuestionRemoveRequest.getQuestionBankId();
+        Long questionId = questionBankQuestionRemoveRequest.getQuestionId();
+        ThrowUtils.throwIf(questionBankId == null || questionId == null, ErrorCode.PARAMS_ERROR);
+        // 构造查询
+        LambdaQueryWrapper<QuestionBankQuestion> lambdaQueryWrapper = Wrappers.lambdaQuery(QuestionBankQuestion.class)
+                .eq(QuestionBankQuestion::getQuestionBankId, questionBankId)
+                .eq(QuestionBankQuestion::getQuestionId, questionId);
+        boolean result = questionBankQuestionService.remove(lambdaQueryWrapper);
+        return ResultUtils.success(result);
+    }
 
     // endregion
 }

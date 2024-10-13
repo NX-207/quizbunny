@@ -16,6 +16,7 @@ import com.nex.quizbunny.model.entity.QuestionBankQuestion;
 import com.nex.quizbunny.model.entity.User;
 import com.nex.quizbunny.model.vo.QuestionVO;
 import com.nex.quizbunny.model.vo.UserVO;
+import com.nex.quizbunny.service.QuestionBankQuestionService;
 import com.nex.quizbunny.service.QuestionService;
 import com.nex.quizbunny.service.UserService;
 import com.nex.quizbunny.utils.SqlUtils;
@@ -44,6 +45,9 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
 
     @Resource
     private UserService userService;
+
+    @Resource
+    private QuestionBankQuestionService questionBankQuestionService;
 
     /**
      * 校验数据
@@ -95,7 +99,7 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
         List<String> tagList = questionQueryRequest.getTags();
         Long userId = questionQueryRequest.getUserId();
         String answer = questionQueryRequest.getAnswer();
-        // todo 补充需要的查询条件
+
         // 从多字段中搜索
         if (StringUtils.isNotBlank(searchText)) {
             // 需要拼接查询条件
@@ -188,37 +192,37 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
         return questionVOPage;
     }
 
-//    /**
-//     * 分页获取题目列表
-//     *
-//     * @param questionQueryRequest
-//     * @return
-//     */
-//    public Page<Question> listQuestionByPage(QuestionQueryRequest questionQueryRequest) {
-//        long current = questionQueryRequest.getCurrent();
-//        long size = questionQueryRequest.getPageSize();
-//        // 题目表的查询条件
-//        QueryWrapper<Question> queryWrapper = this.getQueryWrapper(questionQueryRequest);
-//        // 根据题库查询题目列表接口
-//        Long questionBankId = questionQueryRequest.getQuestionBankId();
-//        if (questionBankId != null) {
-//            // 查询题库内的题目 id
-//            LambdaQueryWrapper<QuestionBankQuestion> lambdaQueryWrapper = Wrappers.lambdaQuery(QuestionBankQuestion.class)
-//                    .select(QuestionBankQuestion::getQuestionId)
-//                    .eq(QuestionBankQuestion::getQuestionBankId, questionBankId);
-//            List<QuestionBankQuestion> questionList = questionBankQuestionService.list(lambdaQueryWrapper);
-//            if (CollUtil.isNotEmpty(questionList)) {
-//                // 取出题目 id 集合
-//                Set<Long> questionIdSet = questionList.stream()
-//                        .map(QuestionBankQuestion::getQuestionId)
-//                        .collect(Collectors.toSet());
-//                // 复用原有题目表的查询条件
-//                queryWrapper.in("id", questionIdSet);
-//            }
-//        }
-//        // 查询数据库
-//        Page<Question> questionPage = this.page(new Page<>(current, size), queryWrapper);
-//        return questionPage;
-//    }
+    /**
+     * 分页获取题目列表
+     *
+     * @param questionQueryRequest
+     * @return
+     */
+    public Page<Question> listQuestionByPage(QuestionQueryRequest questionQueryRequest) {
+        long current = questionQueryRequest.getCurrent();
+        long size = questionQueryRequest.getPageSize();
+        // 题目表的查询条件
+        QueryWrapper<Question> queryWrapper = this.getQueryWrapper(questionQueryRequest);
+        // 根据题库查询题目列表接口
+        Long questionBankId = questionQueryRequest.getQuestionBankId();
+        if (questionBankId != null) {
+            // 查询题库内的题目 id
+            LambdaQueryWrapper<QuestionBankQuestion> lambdaQueryWrapper = Wrappers.lambdaQuery(QuestionBankQuestion.class)
+                    .select(QuestionBankQuestion::getQuestionId)
+                    .eq(QuestionBankQuestion::getQuestionBankId, questionBankId);
+            List<QuestionBankQuestion> questionList = questionBankQuestionService.list(lambdaQueryWrapper);
+            if (CollUtil.isNotEmpty(questionList)) {
+                // 取出题目 id 集合
+                Set<Long> questionIdSet = questionList.stream()
+                        .map(QuestionBankQuestion::getQuestionId)
+                        .collect(Collectors.toSet());
+                // 复用原有题目表的查询条件
+                queryWrapper.in("id", questionIdSet);
+            }
+        }
+        // 查询数据库
+        Page<Question> questionPage = this.page(new Page<>(current, size), queryWrapper);
+        return questionPage;
+    }
 
 }
