@@ -3,7 +3,9 @@ package com.nex.quizbunny.service;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.nex.quizbunny.model.dto.post.PostQueryRequest;
 import com.nex.quizbunny.model.dto.question.QuestionQueryRequest;
+import com.nex.quizbunny.model.entity.Post;
 import com.nex.quizbunny.model.entity.Question;
 import com.nex.quizbunny.model.vo.QuestionVO;
 
@@ -59,5 +61,12 @@ public interface QuestionService extends IService<Question> {
      */
     public Page<Question> listQuestionByPage(QuestionQueryRequest questionQueryRequest);
 
+    /**
+     * 从 ES 查询题目
+     *
+     * @param questionQueryRequest
+     * @return
+     */
+    Page<Question> searchFromEs(QuestionQueryRequest questionQueryRequest);
 }
 
