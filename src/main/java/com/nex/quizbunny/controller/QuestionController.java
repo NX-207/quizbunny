@@ -14,10 +14,7 @@ import com.nex.quizbunny.common.ResultUtils;
 import com.nex.quizbunny.constant.UserConstant;
 import com.nex.quizbunny.exception.BusinessException;
 import com.nex.quizbunny.exception.ThrowUtils;
-import com.nex.quizbunny.model.dto.question.QuestionAddRequest;
-import com.nex.quizbunny.model.dto.question.QuestionEditRequest;
-import com.nex.quizbunny.model.dto.question.QuestionQueryRequest;
-import com.nex.quizbunny.model.dto.question.QuestionUpdateRequest;
+import com.nex.quizbunny.model.dto.question.*;
 import com.nex.quizbunny.model.entity.Question;
 import com.nex.quizbunny.model.entity.QuestionBankQuestion;
 import com.nex.quizbunny.model.entity.User;
@@ -36,8 +33,6 @@ import java.util.List;
 /**
  * 题目接口
  *
- * @author <a href="https://github.com/liyupi">程序员鱼皮</a>
- * @from <a href="https://www.code-nav.cn">编程导航学习圈</a>
  */
 @RestController
 @RequestMapping("/question")
@@ -266,4 +261,13 @@ public class QuestionController {
         Page<Question> questionPage = questionService.searchFromEs(questionQueryRequest);
         return ResultUtils.success(questionService.getQuestionVOPage(questionPage, request));
     }
+
+    @PostMapping("/delete/batch")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<Boolean> batchDeleteQuestions(@RequestBody QuestionBatchDeleteRequest questionBatchDeleteRequest) {
+        ThrowUtils.throwIf(questionBatchDeleteRequest == null, ErrorCode.PARAMS_ERROR);
+        questionService.batchDeleteQuestions(questionBatchDeleteRequest.getQuestionIdList());
+        return ResultUtils.success(true);
+    }
+
 }
